@@ -44,9 +44,9 @@ export function PacketDetail() {
         />
 
         {/* Decoded layers from core */}
-        {layers.map((layer, i) => (
+        {layers.map((layer) => (
           <DetailSection
-            key={`${layer.name}-${i}`}
+            key={`${packet.id}-${layer.name}`}
             title={layer.name}
             fields={layer.fields}
           />
