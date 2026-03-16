@@ -5,31 +5,80 @@ on:
     tags:
       - "core/v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
+  test-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install libpcap (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Run unit tests
+        run: cd apps/core && go test ./...
+
   build-and-release:
     runs-on: ubuntu-latest
+    needs: test-core
     strategy:
       matrix:
         goos: [linux, darwin, windows]
         goarch: [amd64, arm64]
     steps:
       - uses: actions/checkout@v4
+      - name: Install libpcap (Linux)
+        if: ${{ matrix.goos == 'linux' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpcap-dev
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Run tests
-        run: cd apps/core && go test ./...
       - name: Build binary
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
           cd apps/core
-          go build -o vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }} ./cmd/vvvv
+          EXT=""
+          if [ "${GOOS}" = "windows" ]; then EXT=".exe"; fi
+
+          TAGS=""
+          CGO=0
+
+          # Only Linux/amd64 is built with full pcap support in CI.
+          if [ "${GOOS}" = "linux" ] && [ "${GOARCH}" = "amd64" ]; then
+            CGO=1
+          else
+            TAGS="-tags nocapture"
+          fi
+
+          CGO_ENABLED="${CGO}" go build ${TAGS} -o "vvvv-core_${GOOS}_${GOARCH}${EXT}" ./cmd/vvvv
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: apps/core/vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }}
+          path: apps/core/vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }}*
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: build-and-release
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**/vvvv-core_*
 
