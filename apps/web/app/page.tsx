@@ -22,8 +22,8 @@ import {
   WindowsLogo,
   AppleLogo,
   LinuxLogo,
-  DownloadSimple,
 } from "@phosphor-icons/react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { CaptureView } from "@/components/capture/capture-view";
 
@@ -78,6 +78,8 @@ function StatusIndicator({ status }: { status: string }) {
         className="inline-block size-4 animate-spin text-muted-foreground"
         viewBox="0 0 24 24"
         fill="none"
+        role="img"
+        aria-label="Connecting"
       >
         <circle
           className="opacity-25"
