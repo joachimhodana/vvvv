@@ -1,25 +1,55 @@
-<img src="static/images/banner.png" alt="Banner" width="100%">
+<img src="static/images/banner.png" alt="vvvv" width="100%">
 
-## vvvv – modern network protocol analyzer
+# vvvv
 
-This repo is a Turborepo monorepo for **vvvv**, a modern replacement for Wireshark composed of:
+A modern, web-based network protocol analyzer. Think Wireshark - but in your browser.
 
-- `apps/core` – Go service that listens on ports, decodes protocols, exposes a local HTTP API, and streams events over WebSocket.
-- `apps/web` – Next.js + React + TypeScript web UI (served at `https://vvvv.joachimhodana.com`) that connects to the local core over WebSocket.
-- `packages/*` – shared configuration and future CLI/bootstrap packages.
+## Architecture
 
-### Tech stack
+| App | Description |
+|---|---|
+| **`apps/core`** | Go service - captures packets via libpcap, decodes protocols, and streams events over WebSocket. |
+| **`apps/web`** | Next.js dashboard at [vvvv.joachimhodana.com](https://vvvv.joachimhodana.com) - real-time packet table, filtering, and deep inspection. |
+| **`packages/*`** | Shared configuration and tooling. |
 
-- Bun (package manager and script runner)
-- Turborepo (monorepo orchestration)
-- Go (core)
-- Next.js + React + TypeScript + TailwindCSS + Zustand + TanStack Virtual + TanStack Hotkeys (web)
+## Supported Protocols
 
-### Getting started (conceptual)
+ARP · ICMP · ICMPv6 · TCP · UDP · DNS · MDNS · TLS · HTTP · DHCP · SSH · SMTP · FTP · IMAP · POP3 · NTP · SSDP
 
-1. Install **Go** and **Bun**.
-2. Install JS dependencies:
-   - `bun install`
-3. Run dev servers (after apps are scaffolded):
-   - Core: `bunx turbo dev --filter=core`
-   - Web: `bunx turbo dev --filter=web`
+## Tech Stack
+
+- **Core** - Go, gopacket / libpcap
+- **Web** - Next.js, React, TypeScript, Tailwind CSS, Zustand, TanStack Virtual
+- **Tooling** - Bun, Turborepo
+
+## Getting Started
+
+### Prerequisites
+
+- [Go](https://go.dev) 1.22+
+- [Bun](https://bun.sh)
+- libpcap (pre-installed on macOS; `apt install libpcap-dev` on Linux)
+
+### Install & Run
+
+```bash
+# install JS dependencies
+bun install
+
+# start the Go capture core
+cd apps/core && sudo go run ./cmd/vvvv # you need to run as root to capture packets
+
+# start the web UI (separate terminal)
+bun dev
+```
+
+### Running Tests
+
+```bash
+# Go tests (requires cgo + libpcap)
+cd apps/core && go test ./...
+```
+
+## License
+
+Proprietary - all rights reserved.
