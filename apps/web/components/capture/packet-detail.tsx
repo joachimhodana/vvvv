@@ -24,11 +24,7 @@ export function PacketDetail() {
         <span className="text-[11px] font-medium text-muted-foreground">
           Packet #{packet.no} Detail
         </span>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => selectPacket(null)}
-        >
+        <Button variant="ghost" size="icon-sm" onClick={() => selectPacket(null)}>
           <X className="size-3" />
         </Button>
       </div>
@@ -71,13 +67,7 @@ export function PacketDetail() {
   );
 }
 
-function DetailSection({
-  title,
-  fields,
-}: {
-  title: string;
-  fields: Record<string, string>;
-}) {
+function DetailSection({ title, fields }: { title: string; fields: Record<string, string> }) {
   return (
     <details className="group" open>
       <summary className="flex cursor-pointer items-center gap-1 rounded px-2 py-0.5 hover:bg-muted/50">
@@ -86,10 +76,7 @@ function DetailSection({
       </summary>
       <div className="ml-5 space-y-0.5 py-0.5">
         {Object.entries(fields).map(([label, value]) => (
-          <div
-            key={label}
-            className="flex gap-2 rounded px-2 py-0.5 hover:bg-muted/30"
-          >
+          <div key={label} className="flex gap-2 rounded px-2 py-0.5 hover:bg-muted/30">
             <span className="text-muted-foreground">{label}:</span>
             <span className="text-foreground">{value}</span>
           </div>
