@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useConnectionStore } from "@/store/connection";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -15,14 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Terminal,
-  Copy,
-  Check,
-  WindowsLogo,
-  AppleLogo,
-  LinuxLogo,
-} from "@phosphor-icons/react";
+import { Terminal, Copy, Check, WindowsLogo, AppleLogo, LinuxLogo } from "@phosphor-icons/react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { CaptureView } from "@/components/capture/capture-view";
@@ -176,9 +164,7 @@ function InstallDialogBody({
           <InstallToggle selected={installMethod} onSelect={setInstallMethod} />
         </div>
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
-          <code className="flex-1 overflow-x-auto font-mono text-xs text-foreground">
-            {cmd}
-          </code>
+          <code className="flex-1 overflow-x-auto font-mono text-xs text-foreground">{cmd}</code>
           <CopyButton text={cmd} />
         </div>
       </div>
@@ -187,9 +173,7 @@ function InstallDialogBody({
       <div className="space-y-2">
         <p className="font-medium text-foreground">Quick run (coming soon)</p>
         <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
-          <code className="flex-1 font-mono text-xs text-foreground">
-            {NPX_CMD}
-          </code>
+          <code className="flex-1 font-mono text-xs text-foreground">{NPX_CMD}</code>
           <CopyButton text={NPX_CMD} />
         </div>
         <p className="text-xs text-muted-foreground/70">
@@ -220,8 +204,7 @@ function InstallDialogBody({
       </div>
 
       <p className="text-xs text-muted-foreground/70">
-        Once the core is running on port {CORE_PORT}, this page will
-        automatically connect.
+        Once the core is running on port {CORE_PORT}, this page will automatically connect.
       </p>
     </div>
   );
@@ -335,9 +318,8 @@ export default function HomePage() {
               </CardHeader>
               <CardContent className="space-y-3 text-muted-foreground">
                 <p>
-                  These browsers block localhost connections by default. You'll
-                  need a trusted local certificate to let this page talk to the
-                  core.
+                  These browsers block localhost connections by default. You'll need a trusted local
+                  certificate to let this page talk to the core.
                 </p>
                 <ol className="list-inside space-y-2">
                   <li>
@@ -359,8 +341,7 @@ export default function HomePage() {
                   <li>3. Restart your browser</li>
                 </ol>
                 <p className="pt-2 text-xs text-muted-foreground/70">
-                  On Brave you can also just disable Brave Shields for this
-                  page.
+                  On Brave you can also just disable Brave Shields for this page.
                 </p>
               </CardContent>
             </Card>
@@ -400,9 +381,7 @@ export default function HomePage() {
               />
               Browser setup
             </DialogTitle>
-            <DialogDescription>
-              Allow this page to connect to localhost.
-            </DialogDescription>
+            <DialogDescription>Allow this page to connect to localhost.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 text-sm text-muted-foreground">
             <div className="space-y-2">
@@ -428,20 +407,16 @@ export default function HomePage() {
               </p>
             </div>
             <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                Generate and trust a local CA
-              </p>
+              <p className="font-medium text-foreground">Generate and trust a local CA</p>
               <code className="block rounded-lg bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
                 mkcert -install
               </code>
             </div>
             <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                Restart your browser
-              </p>
+              <p className="font-medium text-foreground">Restart your browser</p>
               <p className="text-xs text-muted-foreground/70">
-                Safari and Brave will now trust localhost connections. On Brave
-                you can alternatively disable Brave Shields for this page.
+                Safari and Brave will now trust localhost connections. On Brave you can
+                alternatively disable Brave Shields for this page.
               </p>
             </div>
           </div>
