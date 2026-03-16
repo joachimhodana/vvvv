@@ -35,6 +35,19 @@ export function CaptureView() {
   const [interfaces, setInterfaces] = useState<NetInterface[]>([]);
   const [activeDevice, setActiveDevice] = useState<string | null>(null);
 
+  const startCapture = useCallback(
+    async (device: string) => {
+      try {
+        await corePost("/api/capture/start", { device });
+        setActiveDevice(device);
+        setCapturing(true);
+      } catch (err) {
+        console.error("Failed to start capture:", err);
+      }
+    },
+    [setCapturing],
+  );
+
   useEffect(() => {
     coreGet<NetInterface[]>("/api/interfaces")
       .then((list) => {
@@ -51,8 +64,7 @@ export function CaptureView() {
         }
       })
       .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startCapture]);
 
   useEffect(() => {
     if (wsRef.current) return;
@@ -79,19 +91,6 @@ export function CaptureView() {
       wsRef.current = null;
     };
   }, [addPacket]);
-
-  const startCapture = useCallback(
-    async (device: string) => {
-      try {
-        await corePost("/api/capture/start", { device });
-        setActiveDevice(device);
-        setCapturing(true);
-      } catch (err) {
-        console.error("Failed to start capture:", err);
-      }
-    },
-    [setCapturing],
-  );
 
   const stopCapture = useCallback(async () => {
     try {
