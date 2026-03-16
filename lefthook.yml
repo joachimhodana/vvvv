@@ -1,0 +1,27 @@
+pre-commit:
+  parallel: true
+  commands:
+    go_fmt:
+      glob: "apps/core/**/*.go"
+      run: gofmt -w {staged_files}
+    go_test:
+      glob: "apps/core/**/*.go"
+      run: cd apps/core && go test ./...
+    web_lint:
+      glob: "apps/web/**/*.{ts,tsx}"
+      run: cd apps/web && bun lint
+    web_format:
+      glob: "apps/web/**/*.{ts,tsx}"
+      stage_fixed: true
+      run: cd apps/web && bun format {staged_files}
+
+pre-push:
+  commands:
+    monorepo_check:
+      run: bunx turbo lint test typecheck
+
+commit-msg:
+  commands:
+    message_format:
+      run: echo "$LEFTHOOK_MESSAGE" | grep -E ".+" || (echo "Empty commit message is not allowed" && exit 1)
+
