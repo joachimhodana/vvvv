@@ -16,9 +16,23 @@ function pkt(overrides: Partial<Packet> = {}): Packet {
 }
 
 const ALL_PROTOCOLS = [
-  "TCP", "UDP", "HTTP", "DNS", "TLS", "ICMP", "ICMPv6",
-  "SSH", "SMTP", "ARP", "DHCP", "NTP", "MDNS", "SSDP",
-  "FTP", "IMAP", "POP3",
+  "TCP",
+  "UDP",
+  "HTTP",
+  "DNS",
+  "TLS",
+  "ICMP",
+  "ICMPv6",
+  "SSH",
+  "SMTP",
+  "ARP",
+  "DHCP",
+  "NTP",
+  "MDNS",
+  "SSDP",
+  "FTP",
+  "IMAP",
+  "POP3",
 ];
 
 describe("matchesFilter", () => {
