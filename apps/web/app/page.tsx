@@ -316,14 +316,18 @@ export default function HomePage() {
             <Card>
               <CardHeader>
                 <div className="mb-1 flex items-center gap-2">
-                  <img
+                  <Image
                     src="/icons/safari.png"
                     alt="Safari"
+                    width={40}
+                    height={40}
                     className="h-10 w-auto"
                   />
-                  <img
+                  <Image
                     src="/icons/brave.png"
                     alt="Brave"
+                    width={40}
+                    height={40}
                     className="h-10 w-auto"
                   />
                 </div>
@@ -380,14 +384,18 @@ export default function HomePage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <img
+              <Image
                 src="/icons/safari.png"
                 alt="Safari"
+                width={20}
+                height={20}
                 className="h-5 w-auto"
               />
-              <img
+              <Image
                 src="/icons/brave.png"
                 alt="Brave"
+                width={20}
+                height={20}
                 className="h-5 w-auto"
               />
               Browser setup
@@ -439,6 +447,20 @@ export default function HomePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <footer className="flex items-center justify-between px-6 py-3 text-[11px] text-muted-foreground">
+        <span className="font-mono">
+          Made with ❤️ by{" "}
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Joachim Hodana
+          </a>
+        </span>
+      </footer>
     </div>
   );
 }
