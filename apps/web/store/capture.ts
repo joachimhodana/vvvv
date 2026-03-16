@@ -1,5 +1,10 @@
 import { create } from "zustand";
 
+export type LayerInfo = {
+  name: string;
+  fields: Record<string, string>;
+};
+
 export type Packet = {
   no: number;
   id: string;
@@ -7,8 +12,11 @@ export type Packet = {
   protocol: string;
   source: string;
   dest: string;
+  direction?: string;
   length: number;
   info: string;
+  layers?: LayerInfo[];
+  payload?: string;
 };
 
 const MAX_PACKETS = 50_000;
@@ -29,29 +37,49 @@ type Actions = {
   clearPackets: () => void;
 };
 
+let pendingPackets: Packet[] = [];
+let flushScheduled = false;
+
+function scheduleFlush() {
+  if (flushScheduled) return;
+  flushScheduled = true;
+  requestAnimationFrame(() => {
+    flushScheduled = false;
+    const batch = pendingPackets;
+    pendingPackets = [];
+    if (batch.length === 0) return;
+    useCaptureStore.setState((s) => {
+      const merged = s.packets.length + batch.length > MAX_PACKETS
+        ? [...s.packets, ...batch].slice(-MAX_PACKETS)
+        : [...s.packets, ...batch];
+      return { packets: merged };
+    });
+  });
+}
+
 export const useCaptureStore = create<State & Actions>((set) => ({
   packets: [],
   selectedId: null,
   displayFilter: "",
   isCapturing: true,
 
-  addPacket: (p) =>
-    set((s) => ({
-      packets:
-        s.packets.length >= MAX_PACKETS
-          ? [...s.packets.slice(-MAX_PACKETS + 1), p]
-          : [...s.packets, p],
-    })),
+  addPacket: (p) => {
+    pendingPackets.push(p);
+    scheduleFlush();
+  },
 
-  addPackets: (ps) =>
-    set((s) => ({
-      packets: [...s.packets, ...ps].slice(-MAX_PACKETS),
-    })),
+  addPackets: (ps) => {
+    pendingPackets.push(...ps);
+    scheduleFlush();
+  },
 
   selectPacket: (id) => set({ selectedId: id }),
   setDisplayFilter: (filter) => set({ displayFilter: filter }),
   setCapturing: (v) => set({ isCapturing: v }),
-  clearPackets: () => set({ packets: [], selectedId: null }),
+  clearPackets: () => {
+    pendingPackets = [];
+    set({ packets: [], selectedId: null });
+  },
 }));
 
 /**
