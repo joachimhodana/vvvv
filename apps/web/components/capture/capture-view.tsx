@@ -55,9 +55,7 @@ export function CaptureView() {
         const preferred =
           list.find(
             (i) =>
-              !i.name.startsWith("lo") &&
-              !i.name.startsWith("utun") &&
-              !i.name.startsWith("awdl"),
+              !i.name.startsWith("lo") && !i.name.startsWith("utun") && !i.name.startsWith("awdl"),
           ) ?? list[0];
         if (preferred) {
           startCapture(preferred.name);
