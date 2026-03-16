@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "biome lint app components store",
-    "format": "biome format .",
+    "format": "biome format",
     "test": "vitest",
     "test:types": "tsc --noEmit"
   },
