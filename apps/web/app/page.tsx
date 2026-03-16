@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { useConnectionStore } from "@/store/connection";
 import {
   Card,
@@ -9,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -17,13 +15,61 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Terminal } from "@phosphor-icons/react";
+import {
+  Terminal,
+  Copy,
+  Check,
+  WindowsLogo,
+  AppleLogo,
+  LinuxLogo,
+  DownloadSimple,
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { CaptureView } from "@/components/capture/capture-view";
 
 const CORE_WS_URL = "ws://127.0.0.1:9194/events";
 const CORE_PORT = "9194";
 const GITHUB_URL = "https://github.com/joachimhodana/vvvv";
+const RELEASES_URL = `${GITHUB_URL}/releases`;
+
+type DetectedOS = "macos" | "windows" | "linux";
+
+function detectOS(): DetectedOS {
+  if (typeof navigator === "undefined") return "linux";
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes("win")) return "windows";
+  if (ua.includes("mac")) return "macos";
+  return "linux";
+}
+
+const OS_META: Record<DetectedOS, { label: string; icon: typeof AppleLogo; asset: string }> = {
+  macos: { label: "macOS", icon: AppleLogo, asset: "vvvv-core_darwin_arm64" },
+  windows: { label: "Windows", icon: WindowsLogo, asset: "vvvv-core_windows_amd64.exe" },
+  linux: { label: "Linux", icon: LinuxLogo, asset: "vvvv-core_linux_amd64" },
+};
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }}
+      className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-background hover:text-foreground"
+      title="Copy to clipboard"
+    >
+      {copied ? (
+        <Check className="size-3.5 text-emerald-400" weight="bold" />
+      ) : (
+        <Copy className="size-3.5" weight="bold" />
+      )}
+    </button>
+  );
+}
 
 function StatusIndicator({ status }: { status: string }) {
   if (status === "connecting") {
@@ -60,51 +106,130 @@ function StatusIndicator({ status }: { status: string }) {
   );
 }
 
+type InstallMethod = "curl" | "wget" | "powershell" | "bat";
+
 function InstallToggle({
   selected,
   onSelect,
 }: {
-  selected: "curl" | "wget";
-  onSelect: (v: "curl" | "wget") => void;
+  selected: InstallMethod;
+  onSelect: (v: InstallMethod) => void;
 }) {
+  const options: { value: InstallMethod; label: string }[] = [
+    { value: "curl", label: "curl" },
+    { value: "wget", label: "wget" },
+    { value: "powershell", label: "PowerShell" },
+    { value: "bat", label: "CMD" },
+  ];
+
   return (
     <div className="inline-flex items-center rounded-lg border border-border bg-muted p-0.5 text-xs">
-      <button
-        type="button"
-        onClick={() => onSelect("curl")}
-        className={cn(
-          "rounded-md px-2.5 py-1 font-medium transition-colors",
-          selected === "curl"
-            ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        curl
-      </button>
-      <button
-        type="button"
-        onClick={() => onSelect("wget")}
-        className={cn(
-          "rounded-md px-2.5 py-1 font-medium transition-colors",
-          selected === "wget"
-            ? "bg-background text-foreground shadow-sm"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-      >
-        wget
-      </button>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onSelect(opt.value)}
+          className={cn(
+            "rounded-md px-2.5 py-1 font-medium transition-colors",
+            selected === opt.value
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }
 
-const CURL_CMD = "curl -fsSL https://get.vvvv.dev | sh";
-const WGET_CMD = "wget -qO- https://get.vvvv.dev | sh";
+const INSTALL_COMMANDS: Record<InstallMethod, string> = {
+  curl: "curl -fsSL https://vvvv.joachimhodana.com/install.sh | sh",
+  wget: "wget -qO- https://vvvv.joachimhodana.com/install.sh | sh",
+  powershell: "irm https://vvvv.joachimhodana.com/install.ps1 | iex",
+  bat: "curl -fsSL -o install.bat https://vvvv.joachimhodana.com/install.bat && install.bat",
+};
+
+const NPX_CMD = "npx vvvv listen";
+
+function InstallDialogBody({
+  installMethod,
+  setInstallMethod,
+}: {
+  installMethod: InstallMethod;
+  setInstallMethod: (v: InstallMethod) => void;
+}) {
+  const [os] = useState<DetectedOS>(detectOS);
+  const meta = OS_META[os];
+  const OsIcon = meta.icon;
+  const downloadURL = `${RELEASES_URL}/latest/download/${meta.asset}`;
+  const cmd = INSTALL_COMMANDS[installMethod];
+
+  return (
+    <div className="space-y-5 text-sm text-muted-foreground">
+      {/* Install via script */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="font-medium text-foreground">Install via script</p>
+          <InstallToggle selected={installMethod} onSelect={setInstallMethod} />
+        </div>
+        <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
+          <code className="flex-1 overflow-x-auto font-mono text-xs text-foreground">
+            {cmd}
+          </code>
+          <CopyButton text={cmd} />
+        </div>
+      </div>
+
+      {/* Quick run */}
+      <div className="space-y-2">
+        <p className="font-medium text-foreground">Quick run (coming soon)</p>
+        <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2.5">
+          <code className="flex-1 font-mono text-xs text-foreground">
+            {NPX_CMD}
+          </code>
+          <CopyButton text={NPX_CMD} />
+        </div>
+        <p className="text-xs text-muted-foreground/70">
+          Detects your OS, downloads the latest binary, and starts listening.
+        </p>
+      </div>
+
+      {/* Direct download */}
+      <div className="space-y-2">
+        <a
+          href={downloadURL}
+          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+        >
+          <OsIcon className="size-4" weight="bold" />
+          Download for {meta.label}
+        </a>
+        <p className="text-center text-xs text-muted-foreground/70">
+          Not your OS?{" "}
+          <a
+            href={RELEASES_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary underline underline-offset-4 hover:text-foreground"
+          >
+            See all releases
+          </a>
+        </p>
+      </div>
+
+      <p className="text-xs text-muted-foreground/70">
+        Once the core is running on port {CORE_PORT}, this page will
+        automatically connect.
+      </p>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const { status, setStatus } = useConnectionStore();
   const [installOpen, setInstallOpen] = useState(false);
   const [browserOpen, setBrowserOpen] = useState(false);
-  const [installMethod, setInstallMethod] = useState<"curl" | "wget">("curl");
+  const [installMethod, setInstallMethod] = useState<InstallMethod>("curl");
 
   useEffect(() => {
     setStatus("connecting");
@@ -245,34 +370,7 @@ export default function HomePage() {
               Download and install the binary with a single command.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 text-sm text-muted-foreground">
-            <div className="flex items-center justify-between">
-              <p className="font-medium text-foreground">Download binary</p>
-              <InstallToggle
-                selected={installMethod}
-                onSelect={setInstallMethod}
-              />
-            </div>
-            <code className="block rounded-lg bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
-              {installMethod === "curl" ? CURL_CMD : WGET_CMD}
-            </code>
-            <div className="space-y-2">
-              <p className="font-medium text-foreground">
-                Quick run (coming soon)
-              </p>
-              <code className="block rounded-lg bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
-                npx vvvv listen
-              </code>
-              <p className="text-xs text-muted-foreground/70">
-                Detects your OS, downloads the latest binary, and starts
-                listening.
-              </p>
-            </div>
-            <p className="text-xs text-muted-foreground/70">
-              Once the core is running on port {CORE_PORT}, this page will
-              automatically connect.
-            </p>
-          </div>
+          <InstallDialogBody installMethod={installMethod} setInstallMethod={setInstallMethod} />
         </DialogContent>
       </Dialog>
 
