@@ -40,4 +40,3 @@ export const useConnectionStore = create<State & Actions>((set) => ({
       },
     })),
 }));
-
