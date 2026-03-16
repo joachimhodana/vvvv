@@ -134,12 +134,12 @@ export function PacketTable() {
             const isSelected = pkt.id === selectedId;
 
             return (
-              <div
+              <button
+                type="button"
                 key={pkt.id}
-                role="row"
-                aria-selected={isSelected}
+                aria-pressed={isSelected}
                 className={cn(
-                  "absolute left-0 top-0 flex w-full cursor-pointer items-center border-b border-border/50 px-3 py-0.5 font-mono text-[11px] transition-colors",
+                  "absolute left-0 top-0 flex w-full cursor-pointer items-center border-b border-border/50 px-3 py-0.5 font-mono text-[11px] transition-colors text-left",
                   PROTOCOL_ROW_BG[pkt.protocol] ?? "hover:bg-muted/50",
                   isSelected && "bg-primary/10",
                 )}
@@ -150,7 +150,7 @@ export function PacketTable() {
                 onClick={() => selectPacket(isSelected ? null : pkt.id)}
               >
                 <PacketRow packet={pkt} />
-              </div>
+              </button>
             );
           })}
         </div>
