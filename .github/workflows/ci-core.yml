@@ -1,0 +1,26 @@
+name: ci-core
+
+on:
+  push:
+    paths:
+      - "apps/core/**"
+      - ".github/workflows/ci-core.yml"
+  pull_request:
+    paths:
+      - "apps/core/**"
+      - ".github/workflows/ci-core.yml"
+
+jobs:
+  core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+      - name: Test
+        run: cd apps/core && go test ./...
+      - name: Build
+        run: cd apps/core && go build ./cmd/vvvv
+
