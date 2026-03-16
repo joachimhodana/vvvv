@@ -10,12 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Play,
-  Pause,
-  Trash,
-  FunnelSimple,
-} from "@phosphor-icons/react";
+import { Play, Pause, Trash, FunnelSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 type NetInterface = { name: string; description: string };
@@ -33,8 +28,7 @@ export function FilterBar({
   onTogglePause,
   onSelectDevice,
 }: FilterBarProps) {
-  const { displayFilter, setDisplayFilter, isCapturing, clearPackets } =
-    useCaptureStore();
+  const { displayFilter, setDisplayFilter, isCapturing, clearPackets } = useCaptureStore();
   const [localFilter, setLocalFilter] = useState(displayFilter);
 
   const applyFilter = useCallback(() => {
@@ -56,12 +50,7 @@ export function FilterBar({
             <Play className="size-3.5" weight="bold" />
           )}
         </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={clearPackets}
-          title="Clear packets"
-        >
+        <Button variant="ghost" size="icon-sm" onClick={clearPackets} title="Clear packets">
           <Trash className="size-3.5" weight="bold" />
         </Button>
       </div>
