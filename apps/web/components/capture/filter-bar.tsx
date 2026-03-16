@@ -4,6 +4,13 @@ import { useCallback, useState } from "react";
 import { useCaptureStore } from "@/store/capture";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Play,
   Pause,
   Trash,
@@ -62,23 +69,26 @@ export function FilterBar({
       {interfaces.length > 0 && (
         <>
           <div className="h-4 w-px bg-border" />
-          <select
+          <Select
             value={activeDevice ?? ""}
-            onChange={(e) => {
-              if (e.target.value) onSelectDevice(e.target.value);
+            onValueChange={(val) => {
+              if (val) onSelectDevice(val);
             }}
-            className="h-7 rounded-md border border-border bg-background px-2 font-mono text-xs text-foreground outline-none"
           >
-            <option value="" disabled>
-              Interface…
-            </option>
-            {interfaces.map((iface) => (
-              <option key={iface.name} value={iface.name}>
-                {iface.name}
-                {iface.description ? ` (${iface.description})` : ""}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger size="sm">
+              <SelectValue placeholder="Interface…" />
+            </SelectTrigger>
+            <SelectContent>
+              {interfaces.map((iface) => (
+                <SelectItem key={iface.name} value={iface.name}>
+                  <span className="font-mono text-[11px]">
+                    {iface.name}
+                    {iface.description ? ` (${iface.description})` : ""}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </>
       )}
 
