@@ -49,9 +49,10 @@ function scheduleFlush() {
     pendingPackets = [];
     if (batch.length === 0) return;
     useCaptureStore.setState((s) => {
-      const merged = s.packets.length + batch.length > MAX_PACKETS
-        ? [...s.packets, ...batch].slice(-MAX_PACKETS)
-        : [...s.packets, ...batch];
+      const merged =
+        s.packets.length + batch.length > MAX_PACKETS
+          ? [...s.packets, ...batch].slice(-MAX_PACKETS)
+          : [...s.packets, ...batch];
       return { packets: merged };
     });
   });
@@ -118,10 +119,7 @@ function evaluateExpression(p: Packet, expr: string): boolean {
   }
   if (expr.startsWith("ip.addr")) {
     const val = extractValue(expr);
-    return val
-      ? p.source.toLowerCase().includes(val) ||
-          p.dest.toLowerCase().includes(val)
-      : false;
+    return val ? p.source.toLowerCase().includes(val) || p.dest.toLowerCase().includes(val) : false;
   }
   if (expr.startsWith("frame.len")) {
     const match = expr.match(/(>=|<=|>|<|==|!=)\s*(\d+)/);
