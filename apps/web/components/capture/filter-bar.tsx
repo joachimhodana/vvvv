@@ -11,8 +11,22 @@ import {
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
-export function FilterBar() {
-  const { displayFilter, setDisplayFilter, isCapturing, setCapturing, clearPackets } =
+type NetInterface = { name: string; description: string };
+
+type FilterBarProps = {
+  interfaces: NetInterface[];
+  activeDevice: string | null;
+  onTogglePause: () => void;
+  onSelectDevice: (name: string) => void;
+};
+
+export function FilterBar({
+  interfaces,
+  activeDevice,
+  onTogglePause,
+  onSelectDevice,
+}: FilterBarProps) {
+  const { displayFilter, setDisplayFilter, isCapturing, clearPackets } =
     useCaptureStore();
   const [localFilter, setLocalFilter] = useState(displayFilter);
 
@@ -24,9 +38,9 @@ export function FilterBar() {
     <div className="flex items-center gap-2 border-b border-border bg-card px-3 py-2">
       <div className="flex items-center gap-1">
         <Button
-          variant={isCapturing ? "ghost" : "ghost"}
+          variant="ghost"
           size="icon-sm"
-          onClick={() => setCapturing(!isCapturing)}
+          onClick={onTogglePause}
           title={isCapturing ? "Pause capture" : "Resume capture"}
         >
           {isCapturing ? (
@@ -44,6 +58,29 @@ export function FilterBar() {
           <Trash className="size-3.5" weight="bold" />
         </Button>
       </div>
+
+      {interfaces.length > 0 && (
+        <>
+          <div className="h-4 w-px bg-border" />
+          <select
+            value={activeDevice ?? ""}
+            onChange={(e) => {
+              if (e.target.value) onSelectDevice(e.target.value);
+            }}
+            className="h-7 rounded-md border border-border bg-background px-2 font-mono text-xs text-foreground outline-none"
+          >
+            <option value="" disabled>
+              Interface…
+            </option>
+            {interfaces.map((iface) => (
+              <option key={iface.name} value={iface.name}>
+                {iface.name}
+                {iface.description ? ` (${iface.description})` : ""}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       <div className="h-4 w-px bg-border" />
 
