@@ -355,49 +355,70 @@ func (m *Manager) buildEvent(pkt gopacket.Packet) PacketEvent {
 
 	// --- Application-layer protocol detection (overrides transport proto) ---
 
-	// DNS
+	// DNS — try gopacket layer first, then manual decode for ports where
+	// gopacket may not auto-decode (e.g. mDNS on 5353).
+	var dnsDecoded *layers.DNS
 	if l := pkt.Layer(layers.LayerTypeDNS); l != nil {
-		dns := l.(*layers.DNS)
+		dnsDecoded = l.(*layers.DNS)
+	} else if udpRef != nil && len(payloadBytes) > 12 {
+		isDNSPort := udpRef.DstPort == 53 || udpRef.SrcPort == 53 ||
+			udpRef.DstPort == 5353 || udpRef.SrcPort == 5353
+		if isDNSPort {
+			var d layers.DNS
+			if d.DecodeFromBytes(payloadBytes, gopacket.NilDecodeFeedback) == nil {
+				dnsDecoded = &d
+			}
+		}
+	}
+	if dnsDecoded != nil {
 		proto = "DNS"
-		if len(dns.Questions) > 0 {
-			q := dns.Questions[0]
+		if len(dnsDecoded.Questions) > 0 {
+			q := dnsDecoded.Questions[0]
 			prefix := "Standard query"
-			if dns.QR {
+			if dnsDecoded.QR {
 				prefix = "Standard query response"
 			}
-			info = fmt.Sprintf("%s 0x%04x %s %s", prefix, dns.ID, q.Type, string(q.Name))
+			info = fmt.Sprintf("%s 0x%04x %s %s", prefix, dnsDecoded.ID, q.Type, string(q.Name))
 		}
 		fields := map[string]string{
-			"ID":          fmt.Sprintf("0x%04x", dns.ID),
-			"QR":          fmt.Sprint(dns.QR),
-			"Questions":   fmt.Sprint(len(dns.Questions)),
-			"Answers":     fmt.Sprint(len(dns.Answers)),
-			"Authorities": fmt.Sprint(len(dns.Authorities)),
-			"Additionals": fmt.Sprint(len(dns.Additionals)),
+			"ID":          fmt.Sprintf("0x%04x", dnsDecoded.ID),
+			"QR":          fmt.Sprint(dnsDecoded.QR),
+			"Questions":   fmt.Sprint(len(dnsDecoded.Questions)),
+			"Answers":     fmt.Sprint(len(dnsDecoded.Answers)),
+			"Authorities": fmt.Sprint(len(dnsDecoded.Authorities)),
+			"Additionals": fmt.Sprint(len(dnsDecoded.Additionals)),
 		}
 		pktLayers = append(pktLayers, LayerInfo{Name: "DNS", Fields: fields})
 	}
 
-	// TLS / SSL
+	// TLS / SSL — try gopacket layer first, then manual decode from TCP payload.
+	var tlsDecoded *layers.TLS
 	if tlsLayer := pkt.Layer(layers.LayerTypeTLS); tlsLayer != nil {
-		tls := tlsLayer.(*layers.TLS)
+		tlsDecoded = tlsLayer.(*layers.TLS)
+	} else if tcpRef != nil && len(payloadBytes) >= 5 && isTLSContentType(payloadBytes[0]) {
+		var t layers.TLS
+		if t.DecodeFromBytes(payloadBytes, gopacket.NilDecodeFeedback) == nil {
+			tlsDecoded = &t
+		}
+	}
+	if tlsDecoded != nil {
 		proto = "TLS"
-		if len(tls.ChangeCipherSpec) > 0 {
+		if len(tlsDecoded.ChangeCipherSpec) > 0 {
 			info = "Change Cipher Spec"
-		} else if len(tls.Handshake) > 0 {
+		} else if len(tlsDecoded.Handshake) > 0 {
 			info = "Handshake"
-		} else if len(tls.AppData) > 0 {
-			info = fmt.Sprintf("Application Data [%d bytes]", len(tls.AppData))
-		} else if len(tls.Alert) > 0 {
+		} else if len(tlsDecoded.AppData) > 0 {
+			info = fmt.Sprintf("Application Data [%d bytes]", len(tlsDecoded.AppData))
+		} else if len(tlsDecoded.Alert) > 0 {
 			info = "Alert"
 		}
 		pktLayers = append(pktLayers, LayerInfo{
 			Name: "TLS",
 			Fields: map[string]string{
-				"Handshake Records":       fmt.Sprint(len(tls.Handshake)),
-				"ChangeCipherSpec Records": fmt.Sprint(len(tls.ChangeCipherSpec)),
-				"AppData Records":         fmt.Sprint(len(tls.AppData)),
-				"Alert Records":           fmt.Sprint(len(tls.Alert)),
+				"Handshake Records":        fmt.Sprint(len(tlsDecoded.Handshake)),
+				"ChangeCipherSpec Records": fmt.Sprint(len(tlsDecoded.ChangeCipherSpec)),
+				"AppData Records":          fmt.Sprint(len(tlsDecoded.AppData)),
+				"Alert Records":            fmt.Sprint(len(tlsDecoded.Alert)),
 			},
 		})
 	}
@@ -628,6 +649,11 @@ func formatFlags(flags []string) string {
 		return "[]"
 	}
 	return "[" + join(flags, ", ") + "]"
+}
+
+func isTLSContentType(b byte) bool {
+	// 0x14=ChangeCipherSpec, 0x15=Alert, 0x16=Handshake, 0x17=ApplicationData
+	return b >= 0x14 && b <= 0x17
 }
 
 func join(parts []string, sep string) string {
