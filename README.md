@@ -52,4 +52,4 @@ cd apps/core && go test ./...
 
 ## License
 
-Proprietary - all rights reserved.
+MIT License. Contributions are welcome.
