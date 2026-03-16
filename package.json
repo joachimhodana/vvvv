@@ -1,0 +1,23 @@
+{
+  "name": "vvvv",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "bun@1.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bunx turbo dev",
+    "build": "bunx turbo build",
+    "lint": "bunx turbo lint",
+    "test": "bunx turbo test",
+    "typecheck": "bunx turbo typecheck",
+    "ci": "bunx turbo lint test typecheck",
+    "dev:core": "bunx turbo dev --filter=core",
+    "dev:web": "bunx turbo dev --filter=vvvv-web"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}
