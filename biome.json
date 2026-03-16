@@ -1,5 +1,9 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.7/schema.json",
+  "files": {
+    "includes": ["**/*"],
+    "experimentalScannerIgnores": [".next", "node_modules"]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -10,6 +14,11 @@
     "enabled": true,
     "rules": {
       "recommended": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   },
   "javascript": {
