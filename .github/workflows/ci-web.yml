@@ -1,0 +1,32 @@
+name: ci-web
+
+on:
+  push:
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/ci-web.yml"
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - ".github/workflows/ci-web.yml"
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: "latest"
+      - name: Install dependencies
+        run: bun install
+      - name: Lint
+        run: cd apps/web && bun lint
+      - name: Format check
+        run: cd apps/web && bun format --write=false .
+      - name: Typecheck
+        run: cd apps/web && bun test:types
+      - name: Test
+        run: cd apps/web && bun test
+
