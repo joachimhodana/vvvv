@@ -59,8 +59,8 @@ const COLUMNS = [
 ] as const;
 
 const DIR_ARROW: Record<string, { symbol: string; color: string; title: string }> = {
-  in:    { symbol: "→", color: "text-blue-400", title: "Incoming" },
-  out:   { symbol: "←", color: "text-orange-400", title: "Outgoing" },
+  in: { symbol: "→", color: "text-blue-400", title: "Incoming" },
+  out: { symbol: "←", color: "text-orange-400", title: "Outgoing" },
   local: { symbol: "⇄", color: "text-emerald-400", title: "Local" },
 };
 
@@ -176,9 +176,7 @@ export function PacketTable() {
           Packets: {filtered.length.toLocaleString()}
           {displayFilter.trim() && ` (filtered from ${packets.length.toLocaleString()})`}
         </span>
-        <span>
-          Display: {packets.length.toLocaleString()} · Profile: Default
-        </span>
+        <span>Display: {packets.length.toLocaleString()} · Profile: Default</span>
       </div>
     </div>
   );
@@ -190,11 +188,12 @@ function PacketRow({ packet }: { packet: Packet }) {
   return (
     <>
       <span className="w-[60px] text-muted-foreground">{packet.no}</span>
-      <span className="w-[90px] text-muted-foreground">
-        {formatTime(packet.timestamp)}
-      </span>
+      <span className="w-[90px] text-muted-foreground">{formatTime(packet.timestamp)}</span>
       <span className="w-[140px] truncate">{packet.source}</span>
-      <span className={cn("w-[24px] text-center", dir?.color ?? "text-muted-foreground/30")} title={dir?.title}>
+      <span
+        className={cn("w-[24px] text-center", dir?.color ?? "text-muted-foreground/30")}
+        title={dir?.title}
+      >
         {dir?.symbol ?? "·"}
       </span>
       <span className="w-[140px] truncate">{packet.dest}</span>
