@@ -4,6 +4,8 @@
 
 A modern, web-based network protocol analyzer. Think Wireshark - but in your browser.
 
+![vvvv preview](static/images/preview.png)
+
 ## Architecture
 
 | App | Description |
@@ -14,7 +16,7 @@ A modern, web-based network protocol analyzer. Think Wireshark - but in your bro
 
 ## Supported Protocols
 
-ARP · ICMP · ICMPv6 · TCP · UDP · DNS · MDNS · TLS · HTTP · DHCP · SSH · SMTP · FTP · IMAP · POP3 · NTP · SSDP
+ARP · ICMP · ICMPv6 · TCP · UDP · DNS · MDNS · TLS · HTTP · WebSocket · SSE · DHCP · SSH · SMTP · FTP · IMAP · POP3 · NTP · SSDP
 
 ## Tech Stack
 
@@ -36,11 +38,52 @@ ARP · ICMP · ICMPv6 · TCP · UDP · DNS · MDNS · TLS · HTTP · DHCP · SSH
 # install JS dependencies
 bun install
 
-# start the Go capture core
-cd apps/core && sudo go run ./cmd/vvvv # you need to run as root to capture packets
+# start the Go capture core (requires admin/root privileges for live capture)
+cd apps/core && sudo go run ./cmd/vvvv
 
 # start the web UI (separate terminal)
 bun dev
+```
+
+## How it works
+
+### Privileges (important)
+
+`apps/core` uses libpcap for live capture, so it typically needs to run as **root/admin**:
+
+- macOS/Linux: `sudo ...`
+- Windows: run your terminal as Administrator
+
+### Traces / TCP streams
+
+The leftmost column in the table is a **trace**:
+
+![traces.png](static/images/traces.png)
+
+- **dots/lines with the same color** belong to the **same TCP stream** (same conversation)
+- in the packet details panel you can click **Follow TCP Stream** (↕) to apply `tcp.stream == N`
+
+### Filters (display filters, Wireshark-style)
+
+Filters are Wireshark-style display filters (post-capture). Examples:
+
+- `http`
+- `dns || http`
+- `!arp`
+- `ip.addr == 192.168.1.10`
+- `ip.src == 192.168.1.10 && tcp.port == 80`
+- `http.request.method == "POST"` (alias: `req.http.method`)
+- `tcp.stream == 12`
+
+### Note: HTTPS
+
+For **HTTPS** traffic you won’t see fields like `http.request.method` or `http.status` because the payload is encrypted in TLS (same as Wireshark without TLS keys).
+
+If you want to quickly verify HTTP decoding, use plain HTTP (port 80), e.g.:
+
+```bash
+curl http://httpbin.org/get
+curl -X POST http://httpbin.org/post -d '{"test":"hello"}' -H "Content-Type: application/json"
 ```
 
 ### Running Tests
