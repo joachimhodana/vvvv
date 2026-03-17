@@ -5,10 +5,10 @@ $Repo = "joachimhodana/vvvv"
 $Binary = "vvvv"
 
 function Get-Arch {
-    $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    $arch = $env:PROCESSOR_ARCHITECTURE
     switch ($arch) {
-        "X64"   { return "amd64" }
-        "Arm64" { return "arm64" }
+        "AMD64" { return "amd64" }
+        "ARM64" { return "arm64" }
         default { throw "Unsupported architecture: $arch" }
     }
 }
@@ -50,7 +50,8 @@ function Main {
     Write-Host ""
     Write-Host "Notes:"
     Write-Host "  - Packet capture requires Administrator on most systems."
-    Write-Host "  - Packet capture on Windows requires Npcap to be installed."
+    Write-Host "  - Packet capture on Windows requires Npcap (https://npcap.com/#download)."
+    Write-Host "  - If SmartScreen warns about the binary, click 'More info' then 'Run anyway'."
 }
 
 Main
