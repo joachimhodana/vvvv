@@ -18,6 +18,7 @@ type NetInterface = { name: string; description: string };
 type FilterBarProps = {
   interfaces: NetInterface[];
   activeDevice: string | null;
+  disabled?: boolean;
   onTogglePause: () => void;
   onSelectDevice: (name: string) => void;
 };
@@ -25,6 +26,7 @@ type FilterBarProps = {
 export function FilterBar({
   interfaces,
   activeDevice,
+  disabled = false,
   onTogglePause,
   onSelectDevice,
 }: FilterBarProps) {
@@ -63,8 +65,9 @@ export function FilterBar({
             onValueChange={(val) => {
               if (val) onSelectDevice(val);
             }}
+            disabled={disabled}
           >
-            <SelectTrigger size="sm">
+            <SelectTrigger size="sm" disabled={disabled}>
               <SelectValue placeholder="Interface…" />
             </SelectTrigger>
             <SelectContent>
