@@ -4,12 +4,47 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/joachimhodana/vvvv/core/internal/capture"
 )
+
+type apiError struct {
+	Error string `json:"error"`
+	Code  string `json:"code,omitempty"`
+	Hint  string `json:"hint,omitempty"`
+}
+
+func writeJSONError(w http.ResponseWriter, status int, code, msg, hint string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(apiError{Error: msg, Code: code, Hint: hint})
+}
+
+func classifyCaptureError(err error) (status int, code, msg, hint string) {
+	if err == nil {
+		return http.StatusInternalServerError, "UNKNOWN", "unknown error", ""
+	}
+	raw := err.Error()
+	lower := strings.ToLower(raw)
+
+	// Common privilege-related errors (Linux/macOS/Windows).
+	if strings.Contains(lower, "permission denied") ||
+		strings.Contains(lower, "operation not permitted") ||
+		strings.Contains(lower, "access is denied") ||
+		strings.Contains(lower, "not permitted") {
+		return http.StatusForbidden, "NEEDS_ADMIN", raw, "Packet capture requires elevated privileges. Re-run vvvv core as Administrator/root."
+	}
+	if strings.Contains(lower, "capture not supported") {
+		return http.StatusNotImplemented, "CAPTURE_UNAVAILABLE", raw, "This build does not include capture support (cgo/libpcap disabled)."
+	}
+
+	// Default: treat as bad request for start errors, server error otherwise.
+	return http.StatusBadRequest, "CAPTURE_ERROR", raw, ""
+}
 
 type Server struct {
 	addr     string
@@ -150,12 +185,17 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleInterfaces(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed", "")
 		return
 	}
 	ifaces, err := s.capture.ListInterfaces()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		status, code, msg, hint := classifyCaptureError(err)
+		// Listing interfaces is a server capability; map unknown errors to 500.
+		if status == http.StatusBadRequest {
+			status = http.StatusInternalServerError
+		}
+		writeJSONError(w, status, code, msg, hint)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -164,16 +204,17 @@ func (s *Server) handleInterfaces(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCaptureStart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed", "")
 		return
 	}
 	var opts capture.StartOptions
 	if err := json.NewDecoder(r.Body).Decode(&opts); err != nil {
-		http.Error(w, "invalid payload", http.StatusBadRequest)
+		writeJSONError(w, http.StatusBadRequest, "INVALID_PAYLOAD", "invalid payload", "")
 		return
 	}
 	if err := s.capture.Start(opts); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		status, code, msg, hint := classifyCaptureError(err)
+		writeJSONError(w, status, code, msg, hint)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -182,7 +223,7 @@ func (s *Server) handleCaptureStart(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCaptureStop(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed", "")
 		return
 	}
 	s.capture.Stop()
@@ -192,7 +233,7 @@ func (s *Server) handleCaptureStop(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleCaptureStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		writeJSONError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "method not allowed", "")
 		return
 	}
 	st := s.capture.Status()
