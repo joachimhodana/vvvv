@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO="joachimhodana/vvvv"
-BINARY="vvvv-core"
+BINARY="vvvv"
 INSTALL_DIR="/usr/local/bin"
 
 get_os() {
@@ -54,7 +54,11 @@ main() {
   fi
 
   echo "✓ Installed ${BINARY} to ${INSTALL_DIR}/${BINARY}"
-  echo "  Run:  ${BINARY} listen"
+  echo "  Run:  sudo ${BINARY}"
+  echo
+  echo "Notes:"
+  echo "  - Packet capture requires elevated privileges on most systems."
+  echo "  - If you see \"capture support (cgo/libpcap disabled)\", you downloaded a nocapture build."
 }
 
 main
