@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 set "REPO=joachimhodana/vvvv"
-set "BINARY=vvvv-core"
+set "BINARY=vvvv"
 set "ARCH=amd64"
 
 :: Detect architecture
@@ -54,4 +54,8 @@ if errorlevel 1 (
 )
 
 echo Done! Installed %BINARY% to %DEST%
-echo   Run:  %BINARY% listen
+echo   Run:  %BINARY%
+echo.
+echo Notes:
+echo   - Packet capture requires Administrator on most systems.
+echo   - Packet capture on Windows requires Npcap to be installed.
