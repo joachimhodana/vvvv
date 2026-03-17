@@ -62,15 +62,33 @@ const PROTOCOL_ROW_BG: Record<string, string> = {
 };
 
 const STREAM_TEXT_COLORS = [
-  "text-blue-400", "text-emerald-400", "text-amber-400", "text-rose-400",
-  "text-violet-400", "text-cyan-400", "text-orange-400", "text-pink-400",
-  "text-teal-400", "text-lime-400", "text-indigo-400", "text-fuchsia-400",
+  "text-blue-400",
+  "text-emerald-400",
+  "text-amber-400",
+  "text-rose-400",
+  "text-violet-400",
+  "text-cyan-400",
+  "text-orange-400",
+  "text-pink-400",
+  "text-teal-400",
+  "text-lime-400",
+  "text-indigo-400",
+  "text-fuchsia-400",
 ];
 
 const STREAM_BG_COLORS = [
-  "bg-blue-400", "bg-emerald-400", "bg-amber-400", "bg-rose-400",
-  "bg-violet-400", "bg-cyan-400", "bg-orange-400", "bg-pink-400",
-  "bg-teal-400", "bg-lime-400", "bg-indigo-400", "bg-fuchsia-400",
+  "bg-blue-400",
+  "bg-emerald-400",
+  "bg-amber-400",
+  "bg-rose-400",
+  "bg-violet-400",
+  "bg-cyan-400",
+  "bg-orange-400",
+  "bg-pink-400",
+  "bg-teal-400",
+  "bg-lime-400",
+  "bg-indigo-400",
+  "bg-fuchsia-400",
 ];
 
 function streamTextColor(streamId: number): string {
@@ -172,7 +190,8 @@ export function PacketTable() {
 
             const sid = pkt.streamId;
             const prev = virtualRow.index > 0 ? filtered[virtualRow.index - 1] : null;
-            const next = virtualRow.index < filtered.length - 1 ? filtered[virtualRow.index + 1] : null;
+            const next =
+              virtualRow.index < filtered.length - 1 ? filtered[virtualRow.index + 1] : null;
             const lineUp = !!sid && prev?.streamId === sid;
             const lineDown = !!sid && next?.streamId === sid;
 
@@ -192,11 +211,7 @@ export function PacketTable() {
                 }}
                 onClick={() => selectPacket(isSelected ? null : pkt.id)}
               >
-                <StreamIndicator
-                  streamId={sid}
-                  lineUp={lineUp}
-                  lineDown={lineDown}
-                />
+                <StreamIndicator streamId={sid} lineUp={lineUp} lineDown={lineDown} />
                 <PacketRow packet={pkt} highlight={displayFilter} />
               </button>
             );
@@ -244,7 +259,10 @@ function highlightText(text: string, term: string) {
   if (words.length === 0) return text;
 
   try {
-    const re = new RegExp(`(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "gi");
+    const re = new RegExp(
+      `(${words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`,
+      "gi",
+    );
     const parts = text.split(re);
     if (parts.length <= 1) return text;
     const nodes: Array<string | JSX.Element> = [];
@@ -286,12 +304,25 @@ function StreamIndicator({
   const bgColor = streamBgColor(streamId);
 
   return (
-    <span className="relative flex w-[28px] items-center justify-center" title={`Stream #${streamId}`}>
+    <span
+      className="relative flex w-[28px] items-center justify-center"
+      title={`Stream #${streamId}`}
+    >
       {lineUp && (
-        <span className={cn("absolute left-1/2 top-0 h-1/2 w-[2px] -translate-x-1/2 opacity-30", bgColor)} />
+        <span
+          className={cn(
+            "absolute left-1/2 top-0 h-1/2 w-[2px] -translate-x-1/2 opacity-30",
+            bgColor,
+          )}
+        />
       )}
       {lineDown && (
-        <span className={cn("absolute left-1/2 bottom-0 h-1/2 w-[2px] -translate-x-1/2 opacity-30", bgColor)} />
+        <span
+          className={cn(
+            "absolute left-1/2 bottom-0 h-1/2 w-[2px] -translate-x-1/2 opacity-30",
+            bgColor,
+          )}
+        />
       )}
       <span className={cn("relative z-10 text-[9px] font-bold leading-none", textColor)}>
         {streamId}
@@ -324,7 +355,9 @@ function PacketRow({ packet, highlight }: { packet: Packet; highlight: string })
         {packet.protocol}
       </span>
       <span className="w-[60px] text-muted-foreground">{packet.length}</span>
-      <span className="flex-1 truncate text-foreground/80">{highlightText(packet.info, highlight)}</span>
+      <span className="flex-1 truncate text-foreground/80">
+        {highlightText(packet.info, highlight)}
+      </span>
     </>
   );
 }
