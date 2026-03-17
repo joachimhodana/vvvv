@@ -24,7 +24,7 @@ jobs:
       - name: Lint
         run: cd apps/web && bun lint
       - name: Format check
-        run: cd apps/web && bun format --write=false .
+        run: cd apps/web && bun format .
       - name: Typecheck
         run: cd apps/web && bun test:types
       - name: Test
