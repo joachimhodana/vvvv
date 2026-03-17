@@ -41,7 +41,7 @@ jobs:
             capture: true
           - goos: darwin
             goarch: amd64
-            runner: macos-13
+            runner: macos-12
             capture: true
           - goos: darwin
             goarch: arm64
