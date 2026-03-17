@@ -41,8 +41,11 @@ func classifyCaptureError(err error) (status int, code, msg, hint string) {
 	if strings.Contains(lower, "capture not supported") {
 		return http.StatusNotImplemented, "CAPTURE_UNAVAILABLE", raw, "This build does not include capture support (cgo/libpcap disabled)."
 	}
+	if strings.Contains(lower, "wpcap.dll") || strings.Contains(lower, "packet.dll") ||
+		strings.Contains(lower, "npcap") || strings.Contains(lower, "winpcap") {
+		return http.StatusServiceUnavailable, "NPCAP_MISSING", raw, "Npcap is not installed. Download it from https://npcap.com/#download and enable \"WinPcap API-compatible Mode\" during setup."
+	}
 
-	// Default: treat as bad request for start errors, server error otherwise.
 	return http.StatusBadRequest, "CAPTURE_ERROR", raw, ""
 }
 
