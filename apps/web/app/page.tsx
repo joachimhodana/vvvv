@@ -351,7 +351,9 @@ export default function HomePage() {
                     className="h-10 w-auto"
                   />
                 </div>
-                <CardTitle>{os === "macos" ? "Using Safari or Brave?" : "Browser setup (if needed)"}</CardTitle>
+                <CardTitle>
+                  {os === "macos" ? "Using Safari or Brave?" : "Browser setup (if needed)"}
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-muted-foreground">
                 <p>{browserIntro}</p>
