@@ -153,7 +153,11 @@ export function CaptureView() {
           <div className="font-medium text-foreground">
             {coreError.code === "NEEDS_ADMIN"
               ? "Capture requires administrator privileges."
-              : "Core error."}
+              : coreError.code === "NPCAP_MISSING"
+                ? "Npcap is not installed."
+                : coreError.code === "CAPTURE_UNAVAILABLE"
+                  ? "Capture not available in this build."
+                  : "Core error."}
           </div>
           <div className="text-muted-foreground">
             {coreError.hint ?? coreError.error}
@@ -164,13 +168,32 @@ export function CaptureView() {
                 run as Administrator).
               </>
             )}
+            {coreError.code === "NPCAP_MISSING" && (
+              <>
+                {" "}
+                <a
+                  href="https://npcap.com/#download"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline underline-offset-4 hover:text-foreground"
+                >
+                  Download Npcap
+                </a>{" "}
+                and enable &quot;WinPcap API-compatible Mode&quot; during setup.
+              </>
+            )}
           </div>
         </div>
       )}
       <FilterBar
         interfaces={interfaces}
         activeDevice={activeDevice}
-        disabled={coreError?.code === "NEEDS_ADMIN" || interfaces.length === 0}
+        disabled={
+          coreError?.code === "NEEDS_ADMIN" ||
+          coreError?.code === "NPCAP_MISSING" ||
+          coreError?.code === "CAPTURE_UNAVAILABLE" ||
+          interfaces.length === 0
+        }
         onTogglePause={togglePause}
         onSelectDevice={(name) => {
           if (activeDevice) {
