@@ -161,7 +161,7 @@ jobs:
           fi
           cat > RELEASE.md <<EOF
           <p align="center">
-            <img src="https://raw.githubusercontent.com/${REPO}/main/static/images/preview.png" alt="vvvv preview" width="100%" />
+            <img src="https://raw.githubusercontent.com/${REPO}/main/static/images/banner.png" alt="vvvv" width="100%" />
           </p>
           
           ## vvvv core ${VERSION}
@@ -215,7 +215,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: vvvv core ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           body_path: RELEASE.md
           files: |
             dist/**/vvvv_*
