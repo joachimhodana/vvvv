@@ -58,4 +58,5 @@ echo   Run:  %BINARY%
 echo.
 echo Notes:
 echo   - Packet capture requires Administrator on most systems.
-echo   - Packet capture on Windows requires Npcap to be installed.
+echo   - Packet capture on Windows requires Npcap (https://npcap.com/#download).
+echo   - If SmartScreen warns about the binary, click "More info" then "Run anyway".
