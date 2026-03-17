@@ -30,10 +30,42 @@ function detectOS(): DetectedOS {
   return "linux";
 }
 
+function runCoreCommand(os: DetectedOS): string {
+  if (os === "windows") return "vvvv";
+  return "sudo vvvv";
+}
+
+function mkcertInstallCommand(os: DetectedOS): string {
+  switch (os) {
+    case "macos":
+      return "brew install mkcert";
+    case "windows":
+      return "winget install FiloSottile.mkcert";
+    default:
+      return "sudo apt install mkcert";
+  }
+}
+
+function mkcertInstallAltCommand(os: DetectedOS): string | null {
+  if (os === "windows") return "choco install mkcert";
+  if (os === "linux") return "sudo apt install libnss3-tools";
+  return null;
+}
+
+function browserSetupIntro(os: DetectedOS): string {
+  if (os === "macos") {
+    return "Safari and Brave can block localhost connections by default. You'll need a trusted local certificate to let this page talk to the core.";
+  }
+  if (os === "windows") {
+    return "Some browsers can block localhost connections by default. If you run into connection issues, install a trusted local certificate to let this page talk to the core.";
+  }
+  return "Some browsers can block localhost connections by default. If you run into connection issues, install a trusted local certificate to let this page talk to the core.";
+}
+
 const OS_META: Record<DetectedOS, { label: string; icon: typeof AppleLogo; asset: string }> = {
-  macos: { label: "macOS", icon: AppleLogo, asset: "vvvv-core_darwin_arm64" },
-  windows: { label: "Windows", icon: WindowsLogo, asset: "vvvv-core_windows_amd64.exe" },
-  linux: { label: "Linux", icon: LinuxLogo, asset: "vvvv-core_linux_amd64" },
+  macos: { label: "macOS", icon: AppleLogo, asset: "vvvv_darwin_arm64" },
+  windows: { label: "Windows", icon: WindowsLogo, asset: "vvvv_windows_amd64.exe" },
+  linux: { label: "Linux", icon: LinuxLogo, asset: "vvvv_linux_amd64" },
 };
 
 function CopyButton({ text }: { text: string }) {
@@ -215,6 +247,11 @@ export default function HomePage() {
   const [installOpen, setInstallOpen] = useState(false);
   const [browserOpen, setBrowserOpen] = useState(false);
   const [installMethod, setInstallMethod] = useState<InstallMethod>("curl");
+  const [os] = useState<DetectedOS>(detectOS);
+  const coreRun = runCoreCommand(os);
+  const mkcertInstall = mkcertInstallCommand(os);
+  const mkcertAlt = mkcertInstallAltCommand(os);
+  const browserIntro = browserSetupIntro(os);
 
   useEffect(() => {
     setStatus("connecting");
@@ -276,7 +313,7 @@ export default function HomePage() {
                   <li>
                     2. Run{" "}
                     <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.8125rem] text-foreground">
-                      vvvv listen
+                      {coreRun}
                     </code>
                   </li>
                 </ol>
@@ -314,13 +351,10 @@ export default function HomePage() {
                     className="h-10 w-auto"
                   />
                 </div>
-                <CardTitle>Using Safari or Brave?</CardTitle>
+                <CardTitle>{os === "macos" ? "Using Safari or Brave?" : "Browser setup (if needed)"}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3 text-muted-foreground">
-                <p>
-                  These browsers block localhost connections by default. You'll need a trusted local
-                  certificate to let this page talk to the core.
-                </p>
+                <p>{browserIntro}</p>
                 <ol className="list-inside space-y-2">
                   <li>
                     1. Follow the{" "}
@@ -387,21 +421,27 @@ export default function HomePage() {
             <div className="space-y-2">
               <p className="font-medium text-foreground">Install mkcert</p>
               <code className="block rounded-lg bg-muted px-3 py-2.5 font-mono text-xs text-foreground">
-                brew install mkcert
+                {mkcertInstall}
               </code>
               <p className="text-xs text-muted-foreground/70">
-                On Linux use{" "}
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
-                  apt install mkcert
-                </code>{" "}
-                or see the{" "}
+                {mkcertAlt ? (
+                  <>
+                    You may also need:
+                    <br />
+                    <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
+                      {mkcertAlt}
+                    </code>
+                    <br />
+                  </>
+                ) : null}
+                See the{" "}
                 <a
                   href="https://github.com/FiloSottile/mkcert#installation"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-primary underline underline-offset-4 hover:text-foreground"
                 >
-                  full install instructions
+                  full mkcert install instructions
                 </a>
                 .
               </p>
@@ -415,8 +455,10 @@ export default function HomePage() {
             <div className="space-y-2">
               <p className="font-medium text-foreground">Restart your browser</p>
               <p className="text-xs text-muted-foreground/70">
-                Safari and Brave will now trust localhost connections. On Brave you can
-                alternatively disable Brave Shields for this page.
+                {os === "macos"
+                  ? "Safari and Brave will now trust localhost connections."
+                  : "Your browser will now trust localhost connections."}{" "}
+                On Brave you can alternatively disable Brave Shields for this page.
               </p>
             </div>
           </div>
