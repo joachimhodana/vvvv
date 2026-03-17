@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 
 $Repo = "joachimhodana/vvvv"
-$Binary = "vvvv-core"
+$Binary = "vvvv"
 
 function Get-Arch {
     $arch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
@@ -46,7 +46,11 @@ function Main {
     }
 
     Write-Host "Done! Installed ${Binary} to ${dest}"
-    Write-Host "  Run:  ${Binary} listen"
+    Write-Host "  Run:  ${Binary}"
+    Write-Host ""
+    Write-Host "Notes:"
+    Write-Host "  - Packet capture requires Administrator on most systems."
+    Write-Host "  - Packet capture on Windows requires Npcap to be installed."
 }
 
 Main
