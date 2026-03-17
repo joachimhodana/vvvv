@@ -104,25 +104,20 @@ jobs:
           CGO_ENABLED="${CGO}" go build -trimpath ${TAGS} -o "vvvv_${GOOS}_${GOARCH}${EXT}" ./cmd/vvvv
       - name: Build binary (windows)
         if: ${{ matrix.goos == 'windows' && matrix.capture }}
-        shell: msys2 {0}
+        shell: pwsh
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
         run: |
           cd apps/core
-          TAGS=""
-          CGO=0
-          if [ "${{ matrix.capture }}" = "true" ]; then
-            CGO=1
-          else
-            TAGS="-tags nocapture"
-          fi
 
-          # Build against MinGW libpcap (Npcap-compatible). Runtime requires Npcap installed.
-          export CGO_ENABLED="${CGO}"
-          export CC="x86_64-w64-mingw32-gcc"
-          export CXX="x86_64-w64-mingw32-g++"
-          go build -trimpath ${TAGS} -o "vvvv_${GOOS}_${GOARCH}.exe" ./cmd/vvvv
+          # Use MSYS2's MinGW toolchain for cgo (while keeping the Go toolchain from setup-go).
+          $env:CGO_ENABLED = "1"
+          $env:CC = "C:\msys64\mingw64\bin\gcc.exe"
+          $env:CXX = "C:\msys64\mingw64\bin\g++.exe"
+          $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;$env:PATH"
+
+          go build -trimpath -o "vvvv_${env:GOOS}_${env:GOARCH}.exe" ./cmd/vvvv
       - name: Build binary (windows, nocapture)
         if: ${{ matrix.goos == 'windows' && !matrix.capture }}
         shell: pwsh
