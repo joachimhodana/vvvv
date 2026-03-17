@@ -198,14 +198,7 @@ jobs:
           
           - Packet capture typically requires **Administrator/root** privileges.
           - On Windows, packet capture requires **Npcap** installed.
-          
-          ## Assets
-          
-          Download the binary for your platform from the assets below, or use the install scripts.
           EOF
-          echo >> RELEASE.md
-          # List uploaded binaries (best-effort, keeps the release body tidy)
-          ls -1 dist/**/vvvv_* 2>/dev/null | sed 's|^|- `|; s|$|`|' >> RELEASE.md || true
           cat >> RELEASE.md <<EOF
 
           ## Contributors
