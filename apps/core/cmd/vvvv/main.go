@@ -9,6 +9,8 @@ import (
 )
 
 func main() {
+	requireCapturePrivileges()
+
 	addr := ":9194"
 	if fromEnv := os.Getenv("VVVV_CORE_ADDR"); fromEnv != "" {
 		addr = fromEnv
