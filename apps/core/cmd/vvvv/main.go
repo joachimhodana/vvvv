@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/joachimhodana/vvvv/core/internal/privileges"
 	"github.com/joachimhodana/vvvv/core/internal/server"
 )
 
 func main() {
-	requireCapturePrivileges()
+	if err := privileges.RequireCapturePrivileges(); err != nil {
+		log.Fatal(err)
+	}
 
 	addr := ":9194"
 	if fromEnv := os.Getenv("VVVV_CORE_ADDR"); fromEnv != "" {
