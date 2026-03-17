@@ -1,0 +1,10 @@
+# Default owners for everything in the repo
+* @joachimhodana
+
+# App owners
+/apps/core/ @joachimhodana
+/apps/web/ @joachimhodana
+
+# CI / release
+/.github/workflows/ @joachimhodana
+
