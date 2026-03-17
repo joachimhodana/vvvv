@@ -22,8 +22,13 @@ type PacketEvent struct {
 	Direction string      `json:"direction"`
 	Length    int         `json:"length"`
 	Info      string      `json:"info"`
-	Layers    []LayerInfo `json:"layers"`
-	Payload   string      `json:"payload,omitempty"`
+	Layers     []LayerInfo `json:"layers"`
+	Payload    string      `json:"payload,omitempty"`
+	PayloadHex string     `json:"payloadHex,omitempty"`
+
+	StreamID    int    `json:"streamId,omitempty"`
+	StreamIndex int    `json:"streamIndex,omitempty"`
+	StreamProto string `json:"streamProto,omitempty"`
 }
 
 type Interface struct {
