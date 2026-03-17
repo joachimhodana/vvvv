@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   title: "vvvv — modern network protocol analyzer",
   description:
     "Run a tiny core locally, stream decoded traffic into this page, and explore your network in real time.",
+  manifest: "/manifest.json",
+  other: {
+    "apple-mobile-web-app-title": "vvvv",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
