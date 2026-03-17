@@ -56,11 +56,12 @@ bun dev
 
 ### Traces / TCP streams
 
-The leftmost column in the table is a **trace**:
+The leftmost column in the table shows the **TCP stream ID**:
 
-![traces.png](static/images/traces.png)
+![traces](static/images/traces.png)
 
-- **dots/lines with the same color** belong to the **same TCP stream** (same conversation)
+- each TCP conversation gets a unique **stream number** displayed in a distinct color
+- **connecting lines** between adjacent rows indicate consecutive packets within the same stream
 - in the packet details panel you can click **Follow TCP Stream** (↕) to apply `tcp.stream == N`
 
 ### Filters (display filters, Wireshark-style)
