@@ -160,8 +160,8 @@ export function CaptureView() {
             {coreError.code === "NEEDS_ADMIN" && (
               <>
                 {" "}
-                Try: <code className="rounded bg-muted px-1 py-0.5 font-mono">sudo ./vvvv</code>{" "}
-                (or run as Administrator).
+                Try: <code className="rounded bg-muted px-1 py-0.5 font-mono">sudo ./vvvv</code> (or
+                run as Administrator).
               </>
             )}
           </div>
