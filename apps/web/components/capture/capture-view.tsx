@@ -12,9 +12,30 @@ const CORE_WS_URL = "ws://127.0.0.1:9194/events";
 
 type NetInterface = { name: string; description: string };
 
+type CoreApiError = {
+  error: string;
+  code?: string;
+  hint?: string;
+};
+
+async function readError(res: Response): Promise<CoreApiError> {
+  const contentType = res.headers.get("content-type") ?? "";
+  if (contentType.includes("application/json")) {
+    try {
+      return (await res.json()) as CoreApiError;
+    } catch {
+      // fall through
+    }
+  }
+  return { error: await res.text() };
+}
+
 async function coreGet<T>(path: string): Promise<T> {
   const res = await fetch(`${CORE_BASE}${path}`);
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const e = await readError(res);
+    throw Object.assign(new Error(e.error), e);
+  }
   return res.json();
 }
 
@@ -24,7 +45,10 @@ async function corePost<T>(path: string, body?: unknown): Promise<T> {
     headers: { "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const e = await readError(res);
+    throw Object.assign(new Error(e.error), e);
+  }
   return res.json();
 }
 
@@ -34,6 +58,7 @@ export function CaptureView() {
 
   const [interfaces, setInterfaces] = useState<NetInterface[]>([]);
   const [activeDevice, setActiveDevice] = useState<string | null>(null);
+  const [coreError, setCoreError] = useState<CoreApiError | null>(null);
 
   const startCapture = useCallback(
     async (device: string) => {
@@ -41,8 +66,15 @@ export function CaptureView() {
         await corePost("/api/capture/start", { device });
         setActiveDevice(device);
         setCapturing(true);
+        setCoreError(null);
       } catch (err) {
+        const e = err as CoreApiError;
         console.error("Failed to start capture:", err);
+        setCoreError({
+          error: e.error ?? "Failed to start capture",
+          code: e.code,
+          hint: e.hint,
+        });
       }
     },
     [setCapturing],
@@ -52,6 +84,7 @@ export function CaptureView() {
     coreGet<NetInterface[]>("/api/interfaces")
       .then((list) => {
         setInterfaces(list);
+        setCoreError(null);
         const preferred =
           list.find(
             (i) =>
@@ -61,7 +94,15 @@ export function CaptureView() {
           startCapture(preferred.name);
         }
       })
-      .catch(() => {});
+      .catch((err) => {
+        const e = err as CoreApiError;
+        setInterfaces([]);
+        setCoreError({
+          error: e.error ?? "Failed to list interfaces",
+          code: e.code,
+          hint: e.hint,
+        });
+      });
   }, [startCapture]);
 
   useEffect(() => {
@@ -107,9 +148,29 @@ export function CaptureView() {
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
+      {coreError && (
+        <div className="border-b border-border bg-amber-500/10 px-3 py-2 text-xs">
+          <div className="font-medium text-foreground">
+            {coreError.code === "NEEDS_ADMIN"
+              ? "Capture requires administrator privileges."
+              : "Core error."}
+          </div>
+          <div className="text-muted-foreground">
+            {coreError.hint ?? coreError.error}
+            {coreError.code === "NEEDS_ADMIN" && (
+              <>
+                {" "}
+                Try: <code className="rounded bg-muted px-1 py-0.5 font-mono">sudo ./vvvv</code>{" "}
+                (or run as Administrator).
+              </>
+            )}
+          </div>
+        </div>
+      )}
       <FilterBar
         interfaces={interfaces}
         activeDevice={activeDevice}
+        disabled={coreError?.code === "NEEDS_ADMIN" || interfaces.length === 0}
         onTogglePause={togglePause}
         onSelectDevice={(name) => {
           if (activeDevice) {
