@@ -55,11 +55,13 @@ export function PacketDetail() {
             "Frame Length": `${packet.length} bytes`,
             Protocol: packet.protocol,
             Direction: packet.direction || "unknown",
-            ...(packet.streamId ? {
-              "TCP Stream": `#${packet.streamId}`,
-              "Stream Index": `${packet.streamIndex}`,
-              ...(packet.streamProto ? { "Stream Protocol": packet.streamProto } : {}),
-            } : {}),
+            ...(packet.streamId
+              ? {
+                  "TCP Stream": `#${packet.streamId}`,
+                  "Stream Index": `${packet.streamIndex}`,
+                  ...(packet.streamProto ? { "Stream Protocol": packet.streamProto } : {}),
+                }
+              : {}),
           }}
         />
 
@@ -102,13 +104,7 @@ function DetailSection({ title, fields }: { title: string; fields: Record<string
   );
 }
 
-function PayloadSection({
-  payload,
-  payloadHex,
-}: {
-  payload?: string;
-  payloadHex?: string;
-}) {
+function PayloadSection({ payload, payloadHex }: { payload?: string; payloadHex?: string }) {
   const [view, setView] = useState<"text" | "hex">("text");
 
   return (
