@@ -6,3 +6,6 @@ build
 bun.lockb
 bin
 
+# TypeScript incremental build info
+*.tsbuildinfo
+
