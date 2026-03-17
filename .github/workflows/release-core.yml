@@ -143,6 +143,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-release
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -154,6 +157,13 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${TAG#core/}"
+          PREV_TAG="$(git tag --list 'core/v*' --sort=-version:refname | grep -vx "${TAG}" | head -n 1 || true)"
+          RANGE=""
+          if [ -n "${PREV_TAG}" ]; then
+            RANGE="${PREV_TAG}..${TAG}"
+          else
+            RANGE="${TAG}"
+          fi
           cat > RELEASE.md <<EOF
           <p align="center">
             <img src="https://raw.githubusercontent.com/${REPO}/main/static/images/preview.png" alt="vvvv preview" width="100%" />
@@ -162,6 +172,16 @@ jobs:
           ## vvvv core ${VERSION}
           
           A modern, web-based network protocol analyzer core. Captures packets with libpcap and streams decoded events to the web UI over WebSocket.
+
+          ## Changes
+
+          EOF
+          if [ -n "${PREV_TAG}" ]; then
+            echo "Compared to \`${PREV_TAG}\`:" >> RELEASE.md
+            echo >> RELEASE.md
+          fi
+          git log --no-merges --pretty=format:'- %s (%an)' "${RANGE}" >> RELEASE.md || true
+          cat >> RELEASE.md <<EOF
           
           ## Quickstart
           
@@ -191,6 +211,12 @@ jobs:
           echo >> RELEASE.md
           # List uploaded binaries (best-effort, keeps the release body tidy)
           ls -1 dist/**/vvvv_* 2>/dev/null | sed 's|^|- `|; s|$|`|' >> RELEASE.md || true
+          cat >> RELEASE.md <<EOF
+
+          ## Contributors
+
+          EOF
+          git shortlog -sne "${RANGE}" | sed 's/^/ - /' >> RELEASE.md || true
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
