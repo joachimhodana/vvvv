@@ -91,7 +91,8 @@ describe("matchesFilter", () => {
   it("supports || (OR)", () => {
     const p = pkt({ protocol: "DNS" });
     expect(matchesFilter(p, "tcp || dns")).toBe(true);
-    expect(matchesFilter(p, "tcp || udp")).toBe(false);
+    // DNS runs over UDP, so this should match via protocol aliasing.
+    expect(matchesFilter(p, "tcp || udp")).toBe(true);
   });
 
   it("supports ! (NOT)", () => {
