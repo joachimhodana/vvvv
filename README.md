@@ -31,6 +31,7 @@ ARP · ICMP · ICMPv6 · TCP · UDP · DNS · MDNS · TLS · HTTP · WebSocket �
 - [Go](https://go.dev) 1.22+
 - [Bun](https://bun.sh)
 - libpcap (pre-installed on macOS; `apt install libpcap-dev` on Linux)
+- **Windows only**: [Npcap](https://npcap.com/#download) must be installed before running vvvv (enable "WinPcap API-compatible Mode" during setup)
 
 ### Install & Run
 
