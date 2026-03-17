@@ -145,21 +145,53 @@ function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
   while (i < input.length) {
-    if (input[i] === " " || input[i] === "\t") { i++; continue; }
-    if (input[i] === "(") { tokens.push({ type: "LPAREN" }); i++; continue; }
-    if (input[i] === ")") { tokens.push({ type: "RPAREN" }); i++; continue; }
-    if (input[i] === "!" && input[i + 1] !== "=") { tokens.push({ type: "NOT" }); i++; continue; }
-    if (input[i] === "&" && input[i + 1] === "&") { tokens.push({ type: "AND" }); i += 2; continue; }
-    if (input[i] === "|" && input[i + 1] === "|") { tokens.push({ type: "OR" }); i += 2; continue; }
+    if (input[i] === " " || input[i] === "\t") {
+      i++;
+      continue;
+    }
+    if (input[i] === "(") {
+      tokens.push({ type: "LPAREN" });
+      i++;
+      continue;
+    }
+    if (input[i] === ")") {
+      tokens.push({ type: "RPAREN" });
+      i++;
+      continue;
+    }
+    if (input[i] === "!" && input[i + 1] !== "=") {
+      tokens.push({ type: "NOT" });
+      i++;
+      continue;
+    }
+    if (input[i] === "&" && input[i + 1] === "&") {
+      tokens.push({ type: "AND" });
+      i += 2;
+      continue;
+    }
+    if (input[i] === "|" && input[i + 1] === "|") {
+      tokens.push({ type: "OR" });
+      i += 2;
+      continue;
+    }
     // Multi-char comparison ops
-    if ((input[i] === ">" || input[i] === "<" || input[i] === "!" || input[i] === "=") && input[i + 1] === "=") {
-      tokens.push({ type: "OP", value: `${input[i]}=` }); i += 2; continue;
+    if (
+      (input[i] === ">" || input[i] === "<" || input[i] === "!" || input[i] === "=") &&
+      input[i + 1] === "="
+    ) {
+      tokens.push({ type: "OP", value: `${input[i]}=` });
+      i += 2;
+      continue;
     }
     if (input[i] === ">" || input[i] === "<") {
-      tokens.push({ type: "OP", value: input[i] }); i++; continue;
+      tokens.push({ type: "OP", value: input[i] });
+      i++;
+      continue;
     }
     if (input[i] === "=" && input[i + 1] === "=") {
-      tokens.push({ type: "OP", value: "==" }); i += 2; continue;
+      tokens.push({ type: "OP", value: "==" });
+      i += 2;
+      continue;
     }
     // Quoted string
     if (input[i] === '"' || input[i] === "'") {
@@ -167,7 +199,8 @@ function tokenize(input: string): Token[] {
       let j = i + 1;
       while (j < input.length && input[j] !== quote) j++;
       tokens.push({ type: "STRING", value: input.slice(i + 1, j) });
-      i = j + 1; continue;
+      i = j + 1;
+      continue;
     }
     // Word (field, protocol, number, keyword)
     let j = i;
@@ -262,9 +295,10 @@ function parsePrimary(tokens: Token[], c: Cursor): ASTNode {
     if (next?.type === "OP") {
       const op = (consume(tokens, c) as Token & { value: string }).value;
       const val = peek(tokens, c);
-      const value = val && (val.type === "WORD" || val.type === "STRING")
-        ? (consume(tokens, c) as Token & { value: string }).value
-        : "";
+      const value =
+        val && (val.type === "WORD" || val.type === "STRING")
+          ? (consume(tokens, c) as Token & { value: string }).value
+          : "";
       return { kind: "compare", field: field.value, op, value };
     }
 
@@ -272,9 +306,10 @@ function parsePrimary(tokens: Token[], c: Cursor): ASTNode {
     if (next?.type === "CONTAINS") {
       consume(tokens, c);
       const val = peek(tokens, c);
-      const value = val && (val.type === "WORD" || val.type === "STRING")
-        ? (consume(tokens, c) as Token & { value: string }).value
-        : "";
+      const value =
+        val && (val.type === "WORD" || val.type === "STRING")
+          ? (consume(tokens, c) as Token & { value: string }).value
+          : "";
       return { kind: "contains", field: field.value, value };
     }
 
@@ -290,14 +325,30 @@ function parsePrimary(tokens: Token[], c: Cursor): ASTNode {
 // --- Evaluator ---
 
 const PROTOCOL_ALIASES: Record<string, string[]> = {
-  http:      ["http", "https", "websocket", "sse"],
-  tls:       ["tls", "https"],
-  icmp:      ["icmp", "icmpv6"],
-  tcp:       ["tcp", "http", "https", "tls", "ssh", "smtp", "ftp", "imap", "pop3", "mysql", "postgresql", "redis", "mongodb", "websocket", "sse"],
-  udp:       ["udp", "dns", "mdns", "dhcp", "ntp", "ssdp"],
+  http: ["http", "https", "websocket", "sse"],
+  tls: ["tls", "https"],
+  icmp: ["icmp", "icmpv6"],
+  tcp: [
+    "tcp",
+    "http",
+    "https",
+    "tls",
+    "ssh",
+    "smtp",
+    "ftp",
+    "imap",
+    "pop3",
+    "mysql",
+    "postgresql",
+    "redis",
+    "mongodb",
+    "websocket",
+    "sse",
+  ],
+  udp: ["udp", "dns", "mdns", "dhcp", "ntp", "ssdp"],
   websocket: ["websocket"],
-  ws:        ["websocket"],
-  sse:       ["sse"],
+  ws: ["websocket"],
+  sse: ["sse"],
 };
 
 function extractPort(addr: string): number {
@@ -321,32 +372,49 @@ function extractIP(addr: string): string {
 function getField(p: Packet, field: string): string | number | boolean | undefined {
   const f = field.toLowerCase();
   switch (f) {
-    case "ip.addr": return undefined; // handled specially
-    case "ip.src": return extractIP(p.source);
-    case "ip.dst": return extractIP(p.dest);
-    case "tcp.port": return undefined; // handled specially
-    case "tcp.srcport": return extractPort(p.source);
-    case "tcp.dstport": return extractPort(p.dest);
-    case "udp.port": return undefined; // handled specially
-    case "udp.srcport": return extractPort(p.source);
-    case "udp.dstport": return extractPort(p.dest);
-    case "tcp.stream": return p.streamId ?? 0;
-    case "frame.len": return p.length;
+    case "ip.addr":
+      return undefined; // handled specially
+    case "ip.src":
+      return extractIP(p.source);
+    case "ip.dst":
+      return extractIP(p.dest);
+    case "tcp.port":
+      return undefined; // handled specially
+    case "tcp.srcport":
+      return extractPort(p.source);
+    case "tcp.dstport":
+      return extractPort(p.dest);
+    case "udp.port":
+      return undefined; // handled specially
+    case "udp.srcport":
+      return extractPort(p.source);
+    case "udp.dstport":
+      return extractPort(p.dest);
+    case "tcp.stream":
+      return p.streamId ?? 0;
+    case "frame.len":
+      return p.length;
     case "tcp.len": {
       const layer = p.layers?.find((l) => l.name === "TCP");
       return layer ? parseInt(layer.fields["Payload Length"] ?? "0", 10) : 0;
     }
-    case "tcp.flags.syn": return flagSet(p, "SYN");
-    case "tcp.flags.ack": return flagSet(p, "ACK");
-    case "tcp.flags.fin": return flagSet(p, "FIN");
-    case "tcp.flags.rst": return flagSet(p, "RST");
-    case "tcp.flags.psh": return flagSet(p, "PSH");
-    case "tcp.flags.urg": return flagSet(p, "URG");
+    case "tcp.flags.syn":
+      return flagSet(p, "SYN");
+    case "tcp.flags.ack":
+      return flagSet(p, "ACK");
+    case "tcp.flags.fin":
+      return flagSet(p, "FIN");
+    case "tcp.flags.rst":
+      return flagSet(p, "RST");
+    case "tcp.flags.psh":
+      return flagSet(p, "PSH");
+    case "tcp.flags.urg":
+      return flagSet(p, "URG");
     case "http.request.method":
     case "http.method":
     case "req.http.method": {
-      const layer = p.layers?.find((l) =>
-        l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE"
+      const layer = p.layers?.find(
+        (l) => l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE",
       );
       if (!layer) return undefined;
       const line = layer.fields["Request/Status Line"] ?? "";
@@ -354,15 +422,15 @@ function getField(p: Packet, field: string): string | number | boolean | undefin
       return m ? m[1] : undefined;
     }
     case "http.host": {
-      const layer = p.layers?.find((l) =>
-        l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE"
+      const layer = p.layers?.find(
+        (l) => l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE",
       );
       return layer?.fields.Host;
     }
     case "http.response.code":
     case "http.status": {
-      const layer = p.layers?.find((l) =>
-        l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE"
+      const layer = p.layers?.find(
+        (l) => l.name === "HTTP" || l.name === "WebSocket" || l.name === "SSE",
       );
       if (!layer) return undefined;
       const line = layer.fields["Request/Status Line"] ?? "";
@@ -375,7 +443,8 @@ function getField(p: Packet, field: string): string | number | boolean | undefin
       const m = p.info.match(/\s(\S+)$/);
       return m ? m[1] : undefined;
     }
-    default: return undefined;
+    default:
+      return undefined;
   }
 }
 
@@ -396,12 +465,18 @@ function compare(a: string | number | boolean | undefined, op: string, b: string
     const numB = parseFloat(b);
     if (!Number.isNaN(numA) && !Number.isNaN(numB)) {
       switch (op) {
-        case "==": return numA === numB;
-        case "!=": return numA !== numB;
-        case ">":  return numA > numB;
-        case "<":  return numA < numB;
-        case ">=": return numA >= numB;
-        case "<=": return numA <= numB;
+        case "==":
+          return numA === numB;
+        case "!=":
+          return numA !== numB;
+        case ">":
+          return numA > numB;
+        case "<":
+          return numA < numB;
+        case ">=":
+          return numA >= numB;
+        case "<=":
+          return numA <= numB;
       }
     }
   }
@@ -409,8 +484,10 @@ function compare(a: string | number | boolean | undefined, op: string, b: string
   if (typeof a === "boolean") {
     const boolB = b === "1" || b === "true";
     switch (op) {
-      case "==": return a === boolB;
-      case "!=": return a !== boolB;
+      case "==":
+        return a === boolB;
+      case "!=":
+        return a !== boolB;
     }
     return false;
   }
@@ -418,18 +495,25 @@ function compare(a: string | number | boolean | undefined, op: string, b: string
   const strA = String(a).toLowerCase();
   const strB = b.toLowerCase();
   switch (op) {
-    case "==": return strA === strB;
-    case "!=": return strA !== strB;
-    default: return false;
+    case "==":
+      return strA === strB;
+    case "!=":
+      return strA !== strB;
+    default:
+      return false;
   }
 }
 
 function evalNode(node: ASTNode, p: Packet): boolean {
   switch (node.kind) {
-    case "true": return true;
-    case "or":  return evalNode(node.left, p) || evalNode(node.right, p);
-    case "and": return evalNode(node.left, p) && evalNode(node.right, p);
-    case "not": return !evalNode(node.child, p);
+    case "true":
+      return true;
+    case "or":
+      return evalNode(node.left, p) || evalNode(node.right, p);
+    case "and":
+      return evalNode(node.left, p) && evalNode(node.right, p);
+    case "not":
+      return !evalNode(node.child, p);
 
     case "protocol": {
       const name = node.name.toLowerCase();
@@ -461,13 +545,17 @@ function evalNode(node: ASTNode, p: Packet): boolean {
       const f = node.field.toLowerCase();
       const needle = node.value.toLowerCase();
       if (f === "tcp" || f === "udp" || f === "frame") {
-        return (p.payload?.toLowerCase().includes(needle) ?? false) ||
-               p.info.toLowerCase().includes(needle);
+        return (
+          (p.payload?.toLowerCase().includes(needle) ?? false) ||
+          p.info.toLowerCase().includes(needle)
+        );
       }
       const val = getField(p, f);
       if (val !== undefined) return String(val).toLowerCase().includes(needle);
-      return p.info.toLowerCase().includes(needle) ||
-             (p.payload?.toLowerCase().includes(needle) ?? false);
+      return (
+        p.info.toLowerCase().includes(needle) ||
+        (p.payload?.toLowerCase().includes(needle) ?? false)
+      );
     }
   }
 }
