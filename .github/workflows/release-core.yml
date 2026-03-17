@@ -25,24 +25,66 @@ jobs:
         run: cd apps/core && go test ./...
 
   build-and-release:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     needs: test-core
     strategy:
       matrix:
-        goos: [linux, darwin, windows]
-        goarch: [amd64, arm64]
+        include:
+          # Capture-enabled (cgo + libpcap) builds must be done natively per OS/arch.
+          - goos: linux
+            goarch: amd64
+            runner: ubuntu-latest
+            capture: true
+          - goos: linux
+            goarch: arm64
+            runner: ubuntu-24.04-arm
+            capture: true
+          - goos: darwin
+            goarch: amd64
+            runner: macos-13
+            capture: true
+          - goos: darwin
+            goarch: arm64
+            runner: macos-14
+            capture: true
+
+          # Windows capture build (requires Npcap installed on the target machine).
+          - goos: windows
+            goarch: amd64
+            runner: windows-latest
+            capture: true
+
+          # Keep a windows/arm64 artifact for the install script (still nocapture).
+          - goos: windows
+            goarch: arm64
+            runner: windows-latest
+            capture: false
     steps:
       - uses: actions/checkout@v4
       - name: Install libpcap (Linux)
-        if: ${{ matrix.goos == 'linux' }}
+        if: ${{ matrix.capture && matrix.goos == 'linux' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y libpcap-dev
+      - name: Install libpcap (macOS)
+        if: ${{ matrix.capture && matrix.goos == 'darwin' }}
+        run: |
+          brew update
+          brew install libpcap
+      - name: Set up MSYS2 (Windows)
+        if: ${{ matrix.capture && matrix.goos == 'windows' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-libpcap
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-      - name: Build binary
+      - name: Build binary (unix)
+        if: ${{ matrix.goos != 'windows' }}
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
@@ -53,20 +95,49 @@ jobs:
 
           TAGS=""
           CGO=0
-
-          # Only Linux/amd64 is built with full pcap support in CI.
-          if [ "${GOOS}" = "linux" ] && [ "${GOARCH}" = "amd64" ]; then
+          if [ "${{ matrix.capture }}" = "true" ]; then
             CGO=1
           else
             TAGS="-tags nocapture"
           fi
 
-          CGO_ENABLED="${CGO}" go build ${TAGS} -o "vvvv-core_${GOOS}_${GOARCH}${EXT}" ./cmd/vvvv
+          CGO_ENABLED="${CGO}" go build -trimpath ${TAGS} -o "vvvv_${GOOS}_${GOARCH}${EXT}" ./cmd/vvvv
+      - name: Build binary (windows)
+        if: ${{ matrix.goos == 'windows' && matrix.capture }}
+        shell: msys2 {0}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          cd apps/core
+          TAGS=""
+          CGO=0
+          if [ "${{ matrix.capture }}" = "true" ]; then
+            CGO=1
+          else
+            TAGS="-tags nocapture"
+          fi
+
+          # Build against MinGW libpcap (Npcap-compatible). Runtime requires Npcap installed.
+          export CGO_ENABLED="${CGO}"
+          export CC="x86_64-w64-mingw32-gcc"
+          export CXX="x86_64-w64-mingw32-g++"
+          go build -trimpath ${TAGS} -o "vvvv_${GOOS}_${GOARCH}.exe" ./cmd/vvvv
+      - name: Build binary (windows, nocapture)
+        if: ${{ matrix.goos == 'windows' && !matrix.capture }}
+        shell: pwsh
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+        run: |
+          cd apps/core
+          go build -trimpath -tags nocapture -o "vvvv_${env:GOOS}_${env:GOARCH}.exe" ./cmd/vvvv
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }}
-          path: apps/core/vvvv-core_${{ matrix.goos }}_${{ matrix.goarch }}*
+          name: vvvv_${{ matrix.goos }}_${{ matrix.goarch }}
+          path: apps/core/vvvv_${{ matrix.goos }}_${{ matrix.goarch }}*
 
   publish:
     runs-on: ubuntu-latest
@@ -80,5 +151,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            dist/**/vvvv-core_*
+            dist/**/vvvv_*
 
